@@ -1,0 +1,102 @@
+#!/usr/bin/bash
+
+prog=$(basename $0)
+
+function unknown_script() {
+	local script_name="${1}"
+
+	echo
+	echo "Unknown script file type: ${script_name}"
+	echo
+
+	exit 1
+}
+
+function show_usage() {
+	local var_to_check="${1}"
+	local function_to_call="${2}"
+
+	if [ "${var_to_check}x" == "x" ]; then
+		${function_to_call}
+		exit 42
+	fi
+}
+
+function replace_space() {
+	local text_string="${1}"
+	local replace_char="${2}"
+
+	# This should check for regex special characters and escape them
+	echo "${text_string}" | sed -e "s/ /${replace_char}/g"
+}
+
+function get_database() {
+	database=${1}
+
+	if [ "${database}x" == "x" ]; then
+		# this will be our default for now, we'll get the setupdb script to set a proper default
+		database=resume_builder
+	fi
+}
+
+function get_templatelist() {
+	template_list=${1}
+	local template_type=${2}
+
+	if [ "${template_list}x" == "x" -o "${template_list}" == "all" ]; then
+		template_list=$(echo "SELECT get_column_as_list('template_name', '${template_type}', NULL)" | psql -At ${database})
+	fi
+}
+
+function get_auxfilelist() {
+	local act_type=${1}
+	local database=${2}
+
+	aux_file_list=$(echo "SELECT get_rb_column_as_list('filename', 'misc_files', '${act_type}')" | psql -At ${database})
+}
+
+function get_auxfiles() {
+	local aux_file_list=${1}
+	local database=${2}
+
+	for aux_file in ${aux_file_list}; do
+		echo "SELECT filecontent FROM misc_files WHERE filename = '${aux_file}'" | psql -At ${database} > ${aux_file}
+	done
+}
+
+function list_items() {
+	local database="${1}"
+
+	if [ ${LIST_ITEMS} -ne 1 ]; then
+		return
+	fi
+
+	echo
+	echo "Available Resumes"
+	echo "-----------------"
+	echo "SELECT name FROM resumes" | psql -At ${database}
+	echo
+
+	echo
+	echo "Available Cover Letters"
+	echo "-----------------------"
+	echo "SELECT name FROM cover_letters" | psql -At ${database}
+	echo
+
+	echo
+	echo "Available Resume Templates"
+	echo "--------------------------"
+	echo "SELECT template_name FROM resume_templates" | psql -At ${database}
+	echo
+	echo "Available Letter Templates"
+	echo "--------------------------"
+	echo "SELECT template_name FROM coverletter_templates" | psql -At ${database}
+	echo
+
+	echo
+	echo "Available Contacts"
+	echo "-----------------------"
+	echo "SELECT message FROM get_schoolco_list()" | psql -At ${database}
+	echo
+	exit 3
+}

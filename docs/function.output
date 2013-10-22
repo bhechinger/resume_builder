@@ -1,0 +1,103 @@
+generic_status:
+	[0] - rcode INTEGER,
+	[1] - message VARCHAR
+
+add_exp_info
+add_exp_details
+add_edu_info
+add_cert_info
+
+
+multireturn:
+	[0] - which INTEGER,
+	[1] - id INTEGER,
+	[2] - name VARCHAR
+
+set_contactinfo
+set_userinfo
+get_userinfo
+set_resume_owner
+get_resume_owner
+get_skillgroup
+get_skill
+get_skillgroup_list
+get_skill_list
+set_contact
+get_contact
+add_resume_exp
+add_resume_edu
+add_resume_cert
+
+
+contact_info:
+	[0] - id INTEGER,
+	[1] - name VARCHAR,
+	[2] - address1 VARCHAR,
+	[3] - address2 VARCHAR,
+	[4] - city VARCHAR,
+	[5] - state VARCHAR,
+	[6] - zip INTEGER,
+	[7] - zip4 INTEGER,
+	[8] - home_phone INTEGER,
+	[9] - cell_phone INTEGER,
+	[10] - work_phone INTEGER,
+	[11] - alt_phone INTEGER,
+	[12] - pager INTEGER,
+	[13] - email VARCHAR,
+	[14] - web_url VARCHAR
+
+get_contactinfo
+ 
+
+contact_info_text:
+	[0] - rcode INTEGER,
+	[1] - id INTEGER,
+	[2] - name VARCHAR,
+	[3] - address1 VARCHAR,
+	[4] - address2 VARCHAR,
+	[5] - city VARCHAR,
+	[6] - state VARCHAR,
+	[7] - zip VARCHAR,
+	[8] - home_phone VARCHAR,
+	[9] - cell_phone VARCHAR,
+	[10] - work_phone VARCHAR,
+	[11] - alt_phone VARCHAR,
+	[12] - pager VARCHAR,
+	[13] - email VARCHAR,
+	[14] - web_url VARCHAR
+
+get_contactinfo_text
+
+
+experience_info_text:
+	[0] - rcode INTEGER,
+	[1] - resume VARCHAR,
+	[2] - title VARCHAR,
+	[3] - start_date VARCHAR,
+	[4] - end_date VARCHAR,
+	[5] - company VARCHAR,
+	[6] - details VARCHAR
+
+get_resume_exp
+
+
+education_info_text:
+	[0] - rcode INTEGER,
+	[1] - resume VARCHAR,
+	[2] - school VARCHAR,
+	[3] - program VARCHAR,
+	[4] - attendence_date VARCHAR,
+	[5] - degree VARCHAR
+
+get_resume_edu
+
+
+certification_info_text:
+	[0] - rcode INTEGER,
+	[1] - resume VARCHAR,
+	[2] - name VARCHAR,
+	[3] - receive_date VARCHAR,
+	[4] - expires_date VARCHAR,
+	[5] - certificate_id VARCHAR
+
+get_resume_cert

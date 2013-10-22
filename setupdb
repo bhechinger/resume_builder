@@ -1,0 +1,57 @@
+#!/bin/ksh
+
+# Project Definition:
+proj=resume_builder
+field_mapping_file=field_mappings.php
+
+#collect data
+printf "DB Name: "
+read db
+printf "DB Owner: "
+read owner
+# Figure out how to check if the dbuser exists or not
+createuser -S -D -R -P -l ${owner} 2>/dev/null
+printf "Load test data? [y/n]: "
+read load_test
+
+# create DB
+createdb -O ${owner} ${db}
+createlang plpgsql ${db} 
+
+# setup the right user in the table permissions
+echo
+./gen_access tables.sql ${owner}
+echo
+
+# generate the table mapping arrays for php
+echo "Generating PHP field mapping file..."
+rm -f ${field_mapping_file}
+./gen_field_mappings tables.sql types.sql > ${field_mapping_file}
+echo
+
+TABLES="tables static_table_data types"
+FUNCTIONS="date title skill phone contactinfo schoolco contact user resume experience education certification objective utility latex"
+TEMPLATES="resume_templates letter_templates"
+AUX_FILES="aux_files"
+INPUT_FILES="${TABLES} ${FUNCTIONS} ${TEMPLATES} ${AUX_FILES}"
+
+if [ "${load_test}" == "y" ] || [ "${load_test}" == "Y" ]; then
+	#INPUT_FILES="${INPUT_FILES} testdata"
+	INPUT_FILES="${INPUT_FILES} brian_hechinger"
+fi
+
+# Setup the DB with tables, functions and views
+for all in ${INPUT_FILES}; do
+	if [ -f ${all}_functions.sql ]; then
+		file=${all}_functions.sql
+	else
+		file=${all}.sql
+	fi
+
+	echo "Loading ${file}..."
+	psql -q -f ${file} $db 2>&1 | egrep -v "psql:${file}:[0-9]+: NOTICE: "
+done
+
+echo
+echo "Done setting up ${db}."
+echo

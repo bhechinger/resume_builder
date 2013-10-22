@@ -1,0 +1,143 @@
+Add Contact Info:
+
+  select * from set_contactinfo('contact name', 'contact item', 'contact value');
+
+    contact name - the name of the contact, IE: Thomas Dolby
+    contact item - one of: address1, address2, city, state, zip, home_phone, cell_phone,
+                           work_phone, alt_phone, pager, email, web_url
+
+    contact value - the value to set the item to
+
+Examples:
+
+  select * from set_contactinfo('Thomas Dolby', 'address1', '123 Wherever Street');
+  select * from set_contactinfo('Thomas Dolby', 'address2', 'Apartment J2');
+  select * from set_contactinfo('Thomas Dolby', 'city', 'Philadelphia');
+  select * from set_contactinfo('Thomas Dolby', 'state', 'PA');
+  select * from set_contactinfo('Thomas Dolby', 'zip', '19026-3487');
+  select * from set_contactinfo('Thomas Dolby', 'home_phone', '215-555-1234');
+  select * from set_contactinfo('Thomas Dolby', 'work_phone', '215-555-5500 x5678');
+
+
+Get Contact Info:
+
+  select * from get_contactinfo('contact name');
+  select * from get_contactinfo_text('contact name');
+
+    contact name - the name of the contact, IE: Thomas Dolby
+
+
+Examples:
+
+  select * from get_contactinfo('Thomas Dolby');
+  select * from get_contactinfo_text('Thomas Dolby');
+
+
+Assign Contact Info:
+
+  select * from set_userinfo('username', 'contact name');
+  select * from get_userinfo('username');
+
+Examples:
+
+  select * from set_userinfo('frank', 'Frank Grimes');
+  select * from get_userinfo('frank');
+
+
+Set/Get Resume Owner:
+
+  select * from set_resume_owner('resume name', 'username');
+  select * from get_resume_owner('resume name');
+
+Examples:
+
+  select * from set_resume_owner('Mechanic Resume', 'frank');
+  select * from get_resume_owner('Mechanic Resume');
+
+
+Skills and Skill Groups:
+
+  select * from get_skillgroup('skill group name');
+	select * from get_skill('skill group name', 'skill name');
+	select * from get_skillgroup_list();
+	select * from get_skill_list('skill group name');
+
+    skill group name - the name associated with a group of skills.  Will be automatically
+                       created if it doesn't exist.
+
+    skill name - the name of the skill. Will be automatically created if it doesn't exist.
+
+Examples:
+
+  select * from get_skillgroup('Operating Systems');
+	select * from get_skill('Operating Systems', 'Linux');
+	select * from get_skillgroup_list();
+	select * from get_skill_list('Operating Systems');
+
+
+Set Company Contact:
+
+  select * from set_contact('contact name', 'company name');
+  select * from get_contact('company name');
+
+Examples:
+
+  select * from set_contact('Thomas Dolby', 'Awesome Records');
+  select * from get_contact('Awesome Records');
+
+
+Experience:
+
+	select * from add_exp_info(0, 'job title', 'start date', 'end date', 'company', 'details');
+	select * from add_exp_info(0, 'job title', 'start date', 'end date', 'company');
+
+	--> experience_info_id is the column 'id' returned from the call to add_exp_info()
+
+	select * from add_exp_details(experience_info_id, 'details');
+	select * from add_resume_exp(0, 'resume name', experience_info_id);
+	select * from get_resume_exp('resume name');
+
+Examples:
+
+	select * from add_exp_info(0, 'Assistant Mechanic', '02/2002', '02/2008', 'Bob Had A Garage', 'Primary responsibilities included fetching coffee and sweeping the floor');
+	select * from add_exp_info(0, 'Mechanic', '02/2008', '02/2018', 'Bob Had A Garage');
+	select * from add_exp_details(2, 'Primary responsibilities included sleeping');
+	select * from add_resume_exp(0, 'Mechanic Resume', 1);
+	select * from add_resume_exp(0, 'Mechanic Resume', 2);
+	select * from get_resume_exp('Mechanic Resume');
+
+
+Education:
+
+	select * from add_edu_info(0, 'school', 'program', 'attendence date', 'degree');
+
+	--> education_info_id is the column 'id' returned from the call to add_edu_info()
+
+	select * from add_resume_edu(0, 'resume name', education_info_id);
+	select * from get_resume_edu('resume name');
+
+Examples:
+
+	select * from add_edu_info(0, 'Tom Had A Tech School', 'Small Engine Repair', '02/2002', 'BS');
+	select * from add_edu_info(0, 'You Have Never Heard Of It High School', 'General Studies', '02/2000', 'HS Diploma');
+	select * from add_resume_edu(0, 'Mechanic Resume', 1);
+	select * from add_resume_edu(0, 'Mechanic Resume', 2);
+	select * from get_resume_edu('Mechanic Resume');
+
+
+Certifications:
+
+	select * from add_cert_info(0, 'cert name', 'receive date', 'expire date', 'certificate id');
+
+	--> certification_info_id is the column 'id' returned from the call to add_cert_info()
+
+	select * from add_resume_cert(0, 'resume name', certification_info_id);
+	select * from get_resume_cert('resume name');
+
+Examples:
+
+	select * from add_cert_info(0, 'Certified Floor Sweeper', '02/2002', '02/2022', 'CFS094855');
+	select * from add_cert_info(0, 'Certified Coffee Retriever', '02/2001', '02/2031', 'CCR98234982');
+	select * from add_resume_cert(0, 'Mechanic Resume', 1);
+	select * from add_resume_cert(0, 'Mechanic Resume', 2);
+	select * from get_resume_cert('Mechanic Resume');

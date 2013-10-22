@@ -1,0 +1,52 @@
+#!/usr/bin/awk -f
+BEGIN {
+	printf("<?php\n$fields = Array(\n");
+	array_index = 0;
+	first_table = 1;
+}
+
+/^$/ {
+	next;
+}
+
+/^-+.*$/ {
+	next;
+}
+
+/^(REVOKE|GRANT|SET)/ {
+	next;
+}
+
+/(UNIQUE|CONSTRAINT)/ {
+	next;
+}
+
+/CREATE (TABLE|TYPE)/ {
+	if (first_table) {
+		first_table = 0;
+	} else {
+		printf(",\n");
+	}
+	printf("\t'%s' => Array(\n", $3);
+	array_index = 0;
+	next;
+}
+
+/^\);$/ {
+	printf("\n\t)");
+	next;
+}
+
+{
+	if (array_index > 0) {
+		printf(",\n");
+	}
+	printf("\t\t'%s' => %d", $1, array_index++);
+	if (!(array_index > 0)) {
+		printf("\n");
+	}
+}
+
+END {
+	printf("\n);\n?>\n");
+}

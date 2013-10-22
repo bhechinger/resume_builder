@@ -1,0 +1,46 @@
+prog=$(basename $0)
+table_file=${1}
+db_user=${2}
+tmp_table_file=${table_file}.tmp
+
+if [ "${table_file}x" == "x" ] || [ "${db_user}x" == "x" ]; then
+	echo
+	echo "  Usage: ${prog} <table file> <db user>"
+	echo
+	exit 42
+fi
+
+echo "Generating table access lines for table file ${table_file}"
+
+egrep -v "^REVOKE|^GRANT|^SELECT pg_catalog.setval" ${table_file} > ${tmp_table_file}
+
+nawk 'BEGIN {
+	table_name = "";
+}
+
+{
+	print $0;
+}
+
+/^CREATE TABLE/ {
+	table_name = $3;
+}
+
+/PRIMARY KEY/ {
+	primary_key = $1;
+}
+
+/^\);$/ {
+	if ((table_name) && (primary_key)) {
+		printf("REVOKE ALL ON TABLE %s FROM PUBLIC;\n", table_name);
+		printf("GRANT ALL ON TABLE %s TO %s;\n", table_name, db_user);
+		printf("REVOKE ALL ON TABLE %s_%s_seq FROM PUBLIC;\n", table_name, primary_key);
+		printf("GRANT ALL ON TABLE %s_%s_seq TO %s;\n", table_name, primary_key, db_user);
+		#printf("SELECT pg_catalog.setval ('%s_%s_seq', 1, false);\n", table_name, primary_key);
+		table_name = "";
+		primary_key = "";
+	}
+}
+' "db_user=${db_user}" ${tmp_table_file} > ${table_file}
+
+rm -f ${tmp_table_file}

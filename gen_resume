@@ -1,0 +1,142 @@
+#!/usr/bin/bash
+
+. script_functions
+
+LIST_ITEMS=0
+SHOW_USAGE=0
+OUTPUT_TEX=0
+CLEANUP=0
+
+function resume_usage() {
+	echo
+	echo "Usage: ${prog} -r <resume> -t <template_list> -d <database> [-h] [-L] [-T]"
+	echo
+	echo "  <resume> -- the name of the resume you wish to generate or 'list' to see all the resumes"
+	echo "  <template_list> -- the name(s) of the template(s) you wish to generate"
+	echo "  <database> -- the name of the database to use"
+	echo
+	echo "  <resume> is not optional."
+	echo "  <template_list> is optional, if left off all templates will be generated (can also be set to 'all')"
+	echo "  <database> is optional and will default to the database name given to the setupdb script (eventually)"
+	echo
+}
+
+# redo this help function as it is inacurate
+function letter_usage() {
+	echo
+	echo "Usage: ${prog} -r <resume> -c <company> -l <letter> -t <template_list> -d <database> [-h] [-L] [-T]"
+	echo
+	echo "  <resume> -- the name of the resume you wish to generate or 'list' to see all the resumes"
+	echo "  <template_list> -- the name(s) of the template(s) you wish to generate"
+	echo "  <database> -- the name of the database to use"
+	echo
+	echo "  <resume> is not optional."
+	echo "  <template_list> is optional, if left off all templates will be generated (can also be set to 'all')"
+	echo "  <database> is optional and will default to the database name given to the setupdb script (eventually)"
+	echo
+}
+
+while getopts "r:c:l:t:d:hCLT" flags; do
+	case "${flags}" in
+		r)
+			resume="${OPTARG}"
+			;;
+		c)
+			company="${OPTARG}"
+			;;
+		l)
+			letter="${OPTARG}"
+			;;
+		t)
+			template_list="${OPTARG}"
+			;;
+		d)
+			database="${OPTARG}"
+			;;
+		h)
+			SHOW_USAGE=1
+			exit 42
+			;;
+		C)
+			CLEANUP=1
+			;;
+		L)
+			LIST_ITEMS=1
+			;;
+		T)
+			OUTPUT_TEX=1
+			;;
+		*)
+			echo "Unknown flag: ${flag}"
+			SHOW_USAGE=1
+			;;
+	esac
+done
+
+get_database "${database}"
+list_items "${database}"
+
+if [ "${prog}x" == "gen_resumex" ]; then
+	if [ ${SHOW_USAGE} -eq 1 ]; then
+		resume_usage
+		exit 42
+	fi
+
+	show_usage "${resume}" "resume_usage"
+
+	script_type="resume"
+	template_type="resume_templates"
+
+elif [ "${prog}x" == "gen_letterx" ]; then
+	if [ ${SHOW_USAGE} -eq 1 ]; then
+		letter_usage
+		exit 42
+	fi
+
+	show_usage "${resume}" "letter_usage"
+
+	script_type="letter"
+	template_type="coverletter_templates"
+
+	show_usage "${company}" "letter_usage"
+	show_usage "${letter}" "letter_usage"
+else
+	unknown_script "${prog}"
+fi
+
+get_templatelist "${template_list}" "${template_type}"
+get_auxfilelist "${script_type}" "${database}"
+get_auxfiles "${aux_file_list}" "${database}"
+
+for template in ${template_list}; do
+	if [ "${prog}" == "gen_resume" ]; then
+		output_file=$(replace_space "${resume}_${template}" "_")
+		echo "SELECT message FROM gen_resume('${resume}', '${template}', NULL)" | psql -At ${database} > "${output_file}.tex"
+	else
+		output_file=$(replace_space "${resume}_${template}_${letter}" "_")
+		echo "SELECT message FROM gen_coverletter('${resume}', '${company}', '${template}', '${letter}', NULL)" | psql -At ${database} > "${output_file}.tex"
+	fi
+
+	if [ ${OUTPUT_TEX} -eq 0 ]; then
+		pdflatex -halt-on-error -interaction batchmode "${output_file}.tex" > /dev/null
+		RETVAL=${?}
+
+		if [ ${RETVAL} -eq 0 ]; then
+			echo "Generated ${script_type} ${output_file}.pdf"
+		else
+			echo "Generation of ${script_type} ${output_file}.pdf FAILED!"
+			rm -f "${output_file}.pdf"
+		fi
+
+		if [ ${CLEANUP} -eq 1 ]; then
+			rm -f "${output_file}.log" "${output_file}.aux" "${output_file}.tex"
+		fi
+	else
+		echo "Generated ${script_type} ${output_file}.tex"
+		if [ ${CLEANUP} -eq 1 ]; then
+			rm -f "${output_file}.log" "${output_file}.aux"
+		fi
+	fi
+done
+
+rm -f ${aux_file_list}

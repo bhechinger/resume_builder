@@ -1,0 +1,17 @@
+prog=$(basename $0)
+table_file=${1}
+tmp_table_file=${table_file}.tmp
+
+if [ "${table_file}x" == "x" ]; then
+	echo
+	echo "  Usage: ${prog} <table file>"
+	echo
+	exit 42
+fi
+
+echo
+echo "Removing table access lines for table file ${table_file}"
+echo
+
+egrep -v "^REVOKE|^GRANT|^SELECT pg_catalog.setval" ${table_file} > ${tmp_table_file}
+mv ${tmp_table_file} ${table_file}

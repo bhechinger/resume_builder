@@ -1,0 +1,47 @@
+#!/usr/bin/bash
+
+KNOWN_TYPES='resume letter'
+
+. script_functions
+
+function reload_usage() {
+	echo
+	echo "Usage: ${prog} [-t <template type list>] [-d <database>]"
+	echo
+	echo "  <template type list> -- the list of template types to reload (current options are: ${KNOWN_TYPES})"
+	echo "  <database> -- the name of the database to use"
+	echo
+	echo "  <template type list> is optional and defaults to all template types."
+	echo "  <database> is optional and will default to the database name given to the setupdb script (eventually)"
+	echo
+}
+
+while getopts "t:d:h" flags; do
+	case "${flags}" in
+		t)
+			template_type_list="${OPTARG}"
+			;;
+		d)
+			database="${OPTARG}"
+			;;
+		h)
+			reload_usage
+			exit 42
+	esac
+done
+
+if [ "${template_type_list}x" == "x" ]; then
+	template_type_list="${KNOWN_TYPES}"
+fi
+
+get_database "${database}"
+
+for template_type in ${template_type_list}; do
+	template_table="${template_type}_templates"
+	template_file="${template_table}.sql"
+
+	if [ -f "${template_file}" ]; then
+		echo "DELETE FROM ${template_table}" | psql "${database}"
+		psql -f "${template_file}" "${database}"
+	fi
+done
